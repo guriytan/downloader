@@ -1,6 +1,5 @@
 package org.guriytan.downloader.performer;
 
-import org.guriytan.downloader.Constant;
 import org.guriytan.downloader.application.App;
 import org.guriytan.downloader.dao.DownloadTaskDao;
 import org.guriytan.downloader.entity.DownloadTask;
@@ -24,17 +23,12 @@ public class DatabasePerformer {
         return databasePerformer;
     }
 
-    public List<DownloadTask> findDownloadTask() {
+    public List<DownloadTask> getAllTasks() {
         taskDao.detachAll();
-        return taskDao.queryBuilder().where(DownloadTaskDao.Properties.TaskStatus.notEq(Constant.DOWNLOAD_FINISH)).list();
+        return taskDao.loadAll();
     }
 
-    public List<DownloadTask> findFinishTask() {
-        taskDao.detachAll();
-        return taskDao.queryBuilder().where(DownloadTaskDao.Properties.TaskStatus.eq(Constant.DOWNLOAD_FINISH)).list();
-    }
-
-    public boolean deleteTask(DownloadTask task, Boolean deleteFile) {
+    public boolean deleteTask(DownloadTask task) {
         try {
             taskDao.delete(task);
         } catch (Exception e) {
@@ -54,5 +48,4 @@ public class DatabasePerformer {
     public DownloadTask getTask(String taskId) {
         return taskDao.queryBuilder().where(DownloadTaskDao.Properties.TaskId.eq(taskId)).unique();
     }
-
 }

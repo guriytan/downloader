@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/url" android:title="@string/new_download"/>
-    <item android:id="@+id/bt" android:title="@string/new_bt"/>
-    <item android:id="@+id/scan" android:title="@string/scan"/>
     <item android:id="@+id/settings" android:title="@string/setting"/>
     <item android:id="@+id/exist" android:title="@string/exist"/>
 </menu>

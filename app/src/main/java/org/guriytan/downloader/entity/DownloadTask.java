@@ -1,5 +1,7 @@
 package org.guriytan.downloader.entity;
 
+import androidx.annotation.NonNull;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 
@@ -134,6 +136,7 @@ public class DownloadTask {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "DownloadTask{" +
                 "id=" + id +

@@ -1,12 +1,10 @@
 package org.guriytan.downloader;
 
-import org.guriytan.downloader.util.AppTools;
-
-import java.io.File;
+import org.guriytan.downloader.util.FileUtil;
 
 public class Constant {
     // APP配置、下载文件父路径
-    private static final String SDCARD_PATH = AppTools.getSDCardPath();
+    private static final String SDCARD_PATH = FileUtil.getSDCardPath();
     // SharedPreferences名称
     public static final String APP_SETTING = "app_setting";
     // 数据库名称
@@ -26,11 +24,11 @@ public class Constant {
     public static final int DOWNLOAD_FAIL = 3; // 失败
     public static final int DOWNLOAD_WAIT = 4; // 等待下载
     public static final int DOWNLOAD_FINISH = 5; // 下载完成
+    public static final int DOWNLOAD_DELETE = 6; // 文件已删除
     // 信息状态码
     public static final int SUCCESS_ALERT = 1;
     public static final int ERROR_ALERT = 2;
     public static final int WARNING_ALERT = 3;
-    public static final int CHECK_DELETE = 4;
     // 网络状态码
     public final static int NET_TYPE_UNKNOWN = 0;
     public final static int NET_TYPE_WIFI = 1;

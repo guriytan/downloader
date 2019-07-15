@@ -38,9 +38,9 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'org.greenrobot:greendao:3.2.2'
 
-    implementation 'com.leon:lfilepickerlibrary:1.8.0'
+    implementation 'com.obsez.android.lib.filechooser:filechooser:1.1.19'
     implementation 'com.daimajia.numberprogressbar:library:1.4@aar'
-    implementation 'com.yarolegovich:lovely-dialog:1.1.0'
+    implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
     implementation 'com.irozon.sneaker:sneaker:2.0.0'
 
     testImplementation 'junit:junit:4.12'

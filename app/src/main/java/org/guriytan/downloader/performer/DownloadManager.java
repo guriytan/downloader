@@ -11,8 +11,6 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -56,22 +54,22 @@ public class DownloadManager {
     /**
      * 开始下载
      */
-    public void download(DownloadTask downloadTask, int position, DownloadAdapter downloadAdapter) {
+    public void download(DownloadTask downloadTask, DownloadAdapter downloadAdapter) {
         if (downCalls.size() <= AppTools.getMaximumDownload()) {
             downloadTask.setTaskStatus(Constant.DOWNLOAD_ING);
             databasePerformer.updateTask(downloadTask);
             Observable.just(downloadTask)
                     .filter(s -> !downCalls.containsKey(downloadTask.getTaskId()))//call的map已经有了,就证明正在下载,则这次不下载
-                    .flatMap(task -> Observable.create(new DownloadSubscribe(task, position)))//下载
+                    .flatMap(task -> Observable.create(new DownloadSubscribe(task)))//下载
                     .observeOn(AndroidSchedulers.mainThread())//在主线程回调
                     .subscribeOn(Schedulers.io())//在子线程执行
                     .subscribe(downloadAdapter);//添加观察者
         } else {
             downloadTask.setTaskStatus(Constant.DOWNLOAD_WAIT);
-            waitTask.put(downloadTask.getTaskId(), new Task(downloadTask, position, downloadAdapter));
+            waitTask.put(downloadTask.getTaskId(), new Task(downloadTask, downloadAdapter));
             Observable.just(downloadTask)
                     .filter(s -> !waitTask.containsKey(downloadTask.getTaskId()))//call的map已经有了,就证明正在下载,则这次不下载
-                    .flatMap(task -> Observable.create(new WaitSubscribe(task, position)))//下载
+                    .flatMap(task -> Observable.create(new WaitSubscribe(task)))//下载
                     .observeOn(AndroidSchedulers.mainThread())//在主线程回调
                     .subscribeOn(Schedulers.io())//在子线程执行
                     .subscribe(downloadAdapter);//添加观察者
@@ -96,27 +94,25 @@ public class DownloadManager {
         if (waitTask.size() > 0) {
             Task task = waitTask.entrySet().iterator().next().getValue();
             waitTask.remove(task.downloadTask.getTaskId());
-            download(task.downloadTask, task.position, task.downloadAdapter);
+            download(task.downloadTask, task.downloadAdapter);
         }
     }
 
     // 被观察者
-    private class DownloadSubscribe implements ObservableOnSubscribe<Integer> {
+    private class DownloadSubscribe implements ObservableOnSubscribe<DownloadTask> {
         private DownloadTask task;
-        private int position;
 
-        DownloadSubscribe(DownloadTask task, int position) {
+        DownloadSubscribe(DownloadTask task) {
             this.task = task;
-            this.position = position;
         }
 
         @Override
-        public void subscribe(ObservableEmitter<Integer> e) throws Exception {
+        public void subscribe(ObservableEmitter<DownloadTask> e) throws Exception {
             long downloadLength = task.getDownloadSize();//已经下载好的长度
             long preLength = downloadLength;
             long contentLength = task.getFileSize();//文件的总长度
             //初始进度信息
-            e.onNext(position);
+            e.onNext(task);
 
             Request request = new Request.Builder()
                     //确定下载的范围,添加此头,则服务器就可以跳过已经下载好的部分
@@ -147,7 +143,7 @@ public class DownloadManager {
                         preLength = downloadLength;
                         start = System.currentTimeMillis();
                         databasePerformer.updateTask(task);
-                        e.onNext(position);
+                        e.onNext(task);
                     }
                 }
                 if (len == -1) {
@@ -157,7 +153,7 @@ public class DownloadManager {
                     task.setTaskStatus(Constant.DOWNLOAD_FINISH);
                 }
                 databasePerformer.updateTask(task);
-                e.onNext(position);
+                e.onNext(task);
                 downCalls.remove(task.getTaskId());
             } finally {
                 //关闭IO流
@@ -168,30 +164,26 @@ public class DownloadManager {
         }
     }
 
-    private class WaitSubscribe implements ObservableOnSubscribe<Integer> {
+    private class WaitSubscribe implements ObservableOnSubscribe<DownloadTask> {
         private DownloadTask task;
-        private int position;
 
-        WaitSubscribe(DownloadTask task, int position) {
+        WaitSubscribe(DownloadTask task) {
             this.task = task;
-            this.position = position;
         }
 
         @Override
-        public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-            emitter.onNext(position);
+        public void subscribe(ObservableEmitter<DownloadTask> emitter) {
+            emitter.onNext(task);
             emitter.onComplete();
         }
     }
 
     private class Task {
         DownloadTask downloadTask;
-        int position;
         DownloadAdapter downloadAdapter;
 
-        Task(DownloadTask downloadTask, int position, DownloadAdapter downloadAdapter) {
+        Task(DownloadTask downloadTask, DownloadAdapter downloadAdapter) {
             this.downloadTask = downloadTask;
-            this.position = position;
             this.downloadAdapter = downloadAdapter;
         }
     }

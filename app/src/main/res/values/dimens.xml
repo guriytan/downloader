@@ -10,4 +10,6 @@
     <dimen name="filename_item_text_size">12sp</dimen>
     <dimen name="file_item_text_size">10sp</dimen>
     <dimen name="file_item_btn_icon_height">25dp</dimen>
+    <dimen name="min_width_dialog">300dp</dimen>
+    <dimen name="dialog_padding">24dp</dimen>
 </resources>

@@ -16,7 +16,7 @@
                 android:id="@+id/file_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_video"/>
+                android:src="@drawable/ic_file"/>
         </RelativeLayout>
         <LinearLayout
             android:layout_width="match_parent"
@@ -74,14 +74,14 @@
                         android:layout_width="0dp"
                         android:layout_height="@dimen/file_item_btn_icon_height"
                         android:layout_weight="1"
-                        android:src="@drawable/ic_stop" />
+                        android:src="@drawable/ic_download" />
 
                     <ImageView
                         android:id="@+id/delete_task"
                         android:layout_width="0dp"
                         android:layout_height="@dimen/file_item_btn_icon_height"
                         android:layout_weight="1"
-                        android:src="@drawable/ic_dele" />
+                        android:src="@drawable/ic_delete" />
                     </LinearLayout>
                 </LinearLayout>
                 <LinearLayout
