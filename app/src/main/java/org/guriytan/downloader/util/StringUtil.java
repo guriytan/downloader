@@ -2,14 +2,7 @@ package org.guriytan.downloader.util;
 
 import org.guriytan.downloader.entity.DownloadTask;
 
-import java.math.BigDecimal;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class StringUtil {
-
-    // 文件名不能存在的字符
-    private static Pattern pattern = Pattern.compile("[\\\\/:\\*\\?\\\"<>\\|]");
 
     /**
      * 将long转换为储存单位
@@ -29,10 +22,6 @@ public class StringUtil {
             return String.format(f > 100 ? "%.0f K" : "%.1f K", f);
         } else
             return String.format("%d B", size);
-    }
-
-    public static String convertPercentage(DownloadTask task) {
-        return String.format("%3d", (int) task.getDownloadSize() / task.getFileSize() * 100);
     }
 
     // 转换秒为时间
@@ -55,14 +44,5 @@ public class StringUtil {
     public static String generateTaskId(DownloadTask task) {
         String absolutePath = task.getFilePath() + task.getFileName();
         return MD5Util.MD5Encode(absolutePath);
-    }
-
-    /**
-     * 过滤文件名不能存在的字符
-     */
-    public static String filterString(String filename) {
-        Matcher matcher = pattern.matcher(filename);
-        filename = matcher.replaceAll("");
-        return filename;
     }
 }
