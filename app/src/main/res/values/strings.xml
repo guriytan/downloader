@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Downloader</string>
+
+    <string name="download">下载</string>
+    <string name="finish">已完成</string>
+
+    <string name="setting">设置</string>
+    <string name="scan">扫一扫</string>
+    <string name="new_download">添加下载链接</string>
+    <string name="new_bt">添加BT任务</string>
+
+    <string name="url_download_placeholder">输入或粘贴下载链接</string>
+
+    <string name="setting_header">基本设置</string>
+    <string name="choose_path">选择存储路径</string>
+    <string name="maximum">同时下载任务数</string>
+    <string name="allow_flow">允许流量下载</string>
+
+    <string name="down_count">下载:%1$s/%2$s</string>
+    <string name="down_speed">速度:%1$s</string>
+    <string name="is_stop">已暂停</string>
+    <string name="connecting">连接中</string>
+    <string name="download_fail">下载失败</string>
+    <string name="file_is_delete">文件已删除</string>
+    <string name="open">打开</string>
+    <string name="remaining_time">剩余:%1$s</string>
+    <string name="wait_down">等待下载</string>
+    <string name="downloading">下载中</string>
+
+    <string name="title_dialog">提示</string>
+    <string name="un_support_utl">下载链接不支持</string>
+    <string name="delete_data_with_file">连同文件一起删除</string>
+    <string name="determine_delete">确认删除</string>
+    <string name="delete_success">删除成功</string>
+    <string name="create_success">创建成功</string>
+    <string name="create_fail">创建失败</string>
+    <string name="delete_fail">删除失败</string>
+    <string name="check_net">请检查当前网络</string>
+    <string name="check_mobile_net">当前设置为不允许流量下载</string>
+    <string name="stack_task_fail">开始任务失败，无法获取下载资源</string>
+    <string name="exist">退出</string>
+
+</resources>
