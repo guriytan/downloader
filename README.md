@@ -14,4 +14,4 @@
 * 增加磁力链接以及种子文件下载
 
 ## APP截图：
-![](https://github.com/guriytan/downloader/raw/master/Screenshot.png?raw=true)
+![](https://github.com/guriytan/downloader/raw/master/Screenshot.png)
