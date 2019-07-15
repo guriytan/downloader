@@ -2,6 +2,7 @@ package org.guriytan.downloader.util;
 
 import org.guriytan.downloader.entity.DownloadTask;
 
+import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +29,10 @@ public class StringUtil {
             return String.format(f > 100 ? "%.0f K" : "%.1f K", f);
         } else
             return String.format("%d B", size);
+    }
+
+    public static String convertPercentage(DownloadTask task) {
+        return String.format("%3d", (int) task.getDownloadSize() / task.getFileSize() * 100);
     }
 
     // 转换秒为时间

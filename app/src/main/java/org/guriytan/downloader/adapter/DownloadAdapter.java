@@ -7,13 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.irozon.sneaker.Sneaker;
+import com.moos.library.HorizontalProgressView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -53,7 +54,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.item_downloading, viewGroup, false);
+        View view = inflater.inflate(R.layout.item_task, viewGroup, false);
         return new TaskHolder(view);
     }
 
@@ -61,6 +62,16 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
         final DownloadTask task = list.get(i);
         TaskHolder holder = (TaskHolder) viewHolder;
+        holder.itemView.setOnLongClickListener(v -> {
+            new MaterialDialog.Builder(recyclerView.getContext())
+                    .title(R.string.determine_delete)
+                    .titleColor(recyclerView.getContext().getResources().getColor(R.color.colorAccent))
+                    .positiveText("确认")
+                    .checkBoxPromptRes(R.string.delete_data_with_file, false, null)
+                    .onAny((dialog, which) -> downloadPresenter.deleteTask(task, dialog.isPromptCheckBoxChecked()))
+                    .show();
+            return true;
+        });
         holder.bind(task);
         holder.onClick();
     }
@@ -82,11 +93,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public void onComplete() {
+
     }
 
     @Override
     public void onError(Throwable e) {
         e.printStackTrace();
+        notifyDataSetChanged();
     }
 
     private void addItem(DownloadTask task) {
@@ -143,10 +156,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     class TaskHolder extends RecyclerView.ViewHolder {
         private DownloadTask task;
-        private TextView fileNameText, downSize, downSpeed, remainingTime;
-        private TextView downStatus;
-        private ImageView startTask, deleteTask, fileIcon;
-        private NumberProgressBar progressBar;
+        private TextView fileNameText, downSize, downSpeed, remainingTime, downStatus;
+        private ImageView startTask, fileIcon;
+        private HorizontalProgressView progressBar;
 
         TaskHolder(View itemView) {
             super(itemView);
@@ -155,7 +167,6 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             downSpeed = itemView.findViewById(R.id.down_speed);
             remainingTime = itemView.findViewById(R.id.remaining_time);
             startTask = itemView.findViewById(R.id.start_task);
-            deleteTask = itemView.findViewById(R.id.delete_task);
             fileIcon = itemView.findViewById(R.id.file_icon);
             progressBar = itemView.findViewById(R.id.number_progress_bar);
             downStatus = itemView.findViewById(R.id.down_status);
@@ -164,14 +175,14 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         void bind(DownloadTask task) {
             this.task = task;
             fileNameText.setText(task.getFileName());
-            downSize.setText(String.format(itemView.getResources().getString(R.string.down_count),
-                    StringUtil.convertFileSize(task.getFileSize()), StringUtil.convertFileSize(task.getDownloadSize())));
             downSpeed.setText(String.format(itemView.getResources().getString(R.string.down_speed),
                     StringUtil.convertFileSize(task.getSpeed())));
-            if (task.getFileSize() != 0 && task.getDownloadSize() != 0) {
+            if (task.getTaskStatus() == Constant.DOWNLOAD_ING && task.getFileSize() != 0 && task.getDownloadSize() != 0) {
                 long speed = task.getSpeed() == 0 ? 1 : task.getSpeed();
                 long time = (task.getFileSize() - task.getDownloadSize()) / speed;
                 remainingTime.setText(String.format(itemView.getResources().getString(R.string.remaining_time), StringUtil.formatFromSecond((int) time)));
+            } else {
+                remainingTime.setText("");
             }
             if (task.getDownloadSize() != 0 && task.getFileSize() != 0) {
                 double f1 = new BigDecimal((float) task.getDownloadSize() / task.getFileSize()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
@@ -179,6 +190,8 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             } else {
                 progressBar.setProgress(0);
             }
+            downSize.setText(String.format(itemView.getResources().getString(R.string.down_count),
+                    StringUtil.convertFileSize(task.getDownloadSize()), StringUtil.convertFileSize(task.getFileSize()), (int) progressBar.getProgress()));
             if ((task.getTaskStatus() == Constant.DOWNLOAD_STOP)) {
                 startTask.setImageDrawable(itemView.getResources().getDrawable(R.drawable.ic_download));
                 downStatus.setText(R.string.is_stop);
@@ -200,7 +213,6 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         void onClick() {
             startTask.setOnClickListener(listener);
-            deleteTask.setOnClickListener(listener);
             fileIcon.setOnClickListener(listener);
         }
 
@@ -218,18 +230,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                             downloadPresenter.stopTask(task);
                         }
                         break;
-                    case R.id.delete_task:
-                        // 删除任务
-                        new MaterialDialog.Builder(recyclerView.getContext())
-                                .title(R.string.determine_delete)
-                                .titleColor(recyclerView.getContext().getResources().getColor(R.color.colorAccent))
-                                .positiveText("确认")
-                                .checkBoxPromptRes(R.string.delete_data_with_file, false, null)
-                                .onAny((dialog, which) -> downloadPresenter.deleteTask(task, dialog.isPromptCheckBoxChecked()))
-                                .show();
-                        break;
                     case R.id.file_icon:
                         // 打开文件
+                        Toast.makeText(itemView.getContext(), "尚未支持", Toast.LENGTH_SHORT).show();
                         break;
                 }
             }

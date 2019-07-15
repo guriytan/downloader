@@ -82,6 +82,7 @@ public class DownloadManager {
             if (call != null) {
                 call.cancel();//取消
                 task.setTaskStatus(Constant.DOWNLOAD_STOP);
+                task.setSpeed(0);
                 databasePerformer.updateTask(task);
             }
             downCalls.remove(task.getTaskId());
@@ -152,6 +153,7 @@ public class DownloadManager {
                 if (task.getDownloadSize() >= task.getFileSize()) {
                     task.setTaskStatus(Constant.DOWNLOAD_FINISH);
                 }
+                task.setSpeed(0);
                 databasePerformer.updateTask(task);
                 e.onNext(task);
                 downCalls.remove(task.getTaskId());
