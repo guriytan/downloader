@@ -6,3 +6,6 @@
 2. 完善okhttp请求响应，进一步优化下载任务的创建
 3. 增加解析磁力链接以及种子文件
 4. 增加磁力链接以及种子文件下载
+
+## APP截图：
+![](https://github.com/guriytan/downloader/raw/master/Screenshot_1563183656.png?raw=true)
