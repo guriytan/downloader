@@ -2,7 +2,7 @@
 
 使用Retrofit进行http\https的下载请求，使用Rxjava、eventbus进行下载进度的监控以及消息传递，使用GreenDao进行下载任务的持久化
 
-**目前仅支持http\https的下载链接，而且仅支持单线程断点续传
+*目前仅支持http\https的下载链接，而且仅支持单线程断点续传
 
 下一步待补充的功能：
 1. 增加文件打开功能
