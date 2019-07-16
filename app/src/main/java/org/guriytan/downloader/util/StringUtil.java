@@ -48,4 +48,20 @@ public class StringUtil {
         String absolutePath = task.getFilePath() + task.getFileName();
         return MD5Util.MD5Encode(absolutePath);
     }
+
+    /**
+     * 判断字符串是否为URL
+     *
+     * @param urls 需要判断的String类型url
+     * @return true:是URL；false:不是URL
+     */
+    public static boolean isHttpUrl(String urls) {
+        String regex = "(((https|http)?://)?([a-z0-9]+[.])|(www.))"
+                + "\\w+[.|\\/]([a-z0-9]{0,})?[[.]([a-z0-9]{0,})]+((/[\\S&&[^,;\u4E00-\u9FA5]]+)+)?([.][a-z0-9]{0,}+|/?)";//设置正则表达式
+
+        Pattern pat = Pattern.compile(regex.trim());//对比
+        Matcher mat = pat.matcher(urls.trim());
+
+        return mat.matches();
+    }
 }

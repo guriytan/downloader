@@ -5,14 +5,15 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.irozon.sneaker.Sneaker;
 import com.moos.library.HorizontalProgressView;
 
@@ -37,7 +38,6 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private Disposable disposable;
     private List<DownloadTask> list;
     private Context context;
-    private RecyclerView recyclerView;
     private Activity activity;
     private DownloadPresenter downloadPresenter;
 
@@ -45,7 +45,6 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.context = recyclerView.getContext();
         downloadPresenter = DownloadPresenter.getInstance();
         this.list = downloadPresenter.getAllTasks();
-        this.recyclerView = recyclerView;
         this.activity = activity;
         EventBus.getDefault().register(this);
     }
@@ -62,14 +61,15 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
         final DownloadTask task = list.get(i);
         TaskHolder holder = (TaskHolder) viewHolder;
+        View view = activity.getLayoutInflater().inflate(R.layout.item_comfirm_delete, null);
+        CheckBox checkBox = view.findViewById(R.id.confirm_delete);
+        AlertDialog alertDialog = new AlertDialog.Builder(context)
+                .setView(view)
+                .setPositiveButton(R.string.confirm, (dialog, which) -> downloadPresenter.deleteTask(task, checkBox.isChecked()))
+                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .create();
         holder.itemView.setOnLongClickListener(v -> {
-            new MaterialDialog.Builder(recyclerView.getContext())
-                    .title(R.string.determine_delete)
-                    .titleColor(recyclerView.getContext().getResources().getColor(R.color.colorAccent))
-                    .positiveText("确认")
-                    .checkBoxPromptRes(R.string.delete_data_with_file, false, null)
-                    .onAny((dialog, which) -> downloadPresenter.deleteTask(task, dialog.isPromptCheckBoxChecked()))
-                    .show();
+            alertDialog.show();
             return true;
         });
         holder.bind(task);

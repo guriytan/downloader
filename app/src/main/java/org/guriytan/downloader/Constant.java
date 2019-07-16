@@ -18,6 +18,8 @@ public class Constant {
     // 默认不允许使用流量下载
     public static final boolean ALLOW_MOBILE_NET = false;
     public static final String ALLOW_MOBILE_NET_KEY = "ALLOW_MOBILE_NET";
+    // 种子文件后缀
+    public static final String SUFFIX = "torrent";
     // 任务状态码
     public static final int DOWNLOAD_STOP = 1; // 暂停
     public static final int DOWNLOAD_ING = 2; // 正在下载

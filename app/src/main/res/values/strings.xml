@@ -17,6 +17,9 @@
     <string name="download_fail">下载失败</string>
     <string name="file_is_delete">文件已删除</string>
     <string name="open">打开</string>
+    <string name="title_choose_file">选择种子文件</string>
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
 
     <string name="wait_down">等待下载</string>
     <string name="downloading">下载中</string>

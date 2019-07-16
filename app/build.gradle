@@ -38,8 +38,7 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'org.greenrobot:greendao:3.2.2'
 
-    implementation 'com.obsez.android.lib.filechooser:filechooser:1.1.19'
-    implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
+    implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
     implementation 'com.irozon.sneaker:sneaker:2.0.0'
     implementation 'com.moos:Material-ProgressView:1.0.5'
 

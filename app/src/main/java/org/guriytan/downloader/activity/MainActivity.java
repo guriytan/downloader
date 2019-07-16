@@ -2,15 +2,16 @@ package org.guriytan.downloader.activity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-import com.afollestad.materialdialogs.MaterialDialog;
-import com.afollestad.materialdialogs.folderselector.FileChooserDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.obsez.android.lib.filechooser.ChooserDialog;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -20,9 +21,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
 import android.os.Message;
-import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
@@ -36,17 +38,15 @@ import org.guriytan.downloader.util.AppTools;
 import org.guriytan.downloader.util.FileUtil;
 import org.guriytan.downloader.util.StringUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity implements FileChooserDialog.FileCallback {
+public class MainActivity extends AppCompatActivity {
     private static OkHttpClient mClient; // OKHttpClient;
     private Context context;
 
@@ -107,38 +107,36 @@ public class MainActivity extends AppCompatActivity implements FileChooserDialog
     }
 
     private void initialButton(FloatingActionButton fab) {
-        fab.setOnClickListener(v ->
-                new MaterialDialog.Builder(this)
-                        .title(context.getString(R.string.url_download_placeholder))
-                        .inputType(InputType.TYPE_CLASS_TEXT)
-                        .input("", null, (dialog, input) -> {
-                            CreateDownloadTask create = new CreateDownloadTask(input.toString(), handler);
-                            new Thread(create).start();
-                        })
-                        .positiveText("确定")
-                        .neutralText("选择文件")
-                        .onNeutral((dialog, which) -> chooseTorrent())
-                        .show()
-        );
+        View view = getLayoutInflater().inflate(R.layout.item_url_input, null);
+        EditText editText = view.findViewById(R.id.text_input_dialog);
+        AlertDialog createTask = new AlertDialog.Builder(this)
+                .setView(view)
+                .setTitle(getString(R.string.url_download_placeholder))
+                .setCancelable(true)
+                .setPositiveButton(getString(R.string.confirm), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String url = editText.getText().toString();
+                        if (StringUtil.isHttpUrl(url)) {
+                            CreateDownloadTask task = new CreateDownloadTask(editText.getText().toString(), handler);
+                            new Thread(task).start();
+                        } else EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.create_fail));
+                    }
+                })
+                .setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss())
+                .setNeutralButton(getString(R.string.title_choose_file), (dialog, which) -> chooseTorrent()).create();
+        fab.setOnClickListener(v ->createTask.show());
     }
 
     private void chooseTorrent() {
-        new FileChooserDialog.Builder(MainActivity.this)
-                .initialPath(Constant.DOWNLOAD_PATH)  // changes initial path, defaults to external storage directory
-                .extensionsFilter(".torrent") // Optional extension filter, will override mimeType()
-                .tag("optional-identifier")
-                .goUpLabel("Up") // custom go up label, default label is "..."
-                .show(getSupportFragmentManager());
-    }
-
-    @Override
-    public void onFileSelection(@NonNull FileChooserDialog dialog, @NonNull File file) {
-        Toast.makeText(context, file.getAbsolutePath(), Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onFileChooserDismissed(@NonNull FileChooserDialog dialog) {
-
+        new ChooserDialog(MainActivity.this)
+                .withFilter(false, false, Constant.SUFFIX)
+                .withStartFile(Constant.DOWNLOAD_PATH)
+                .withResources(R.string.title_choose_file, R.string.confirm, R.string.cancel)
+                .withChosenListener((path, file) ->
+                        Toast.makeText(MainActivity.this, "FILE: " + path, Toast.LENGTH_SHORT).show())
+                .build()
+                .show();
     }
 
     private Handler handler = new Handler(msg -> {

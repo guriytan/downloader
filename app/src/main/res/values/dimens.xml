@@ -8,6 +8,8 @@
     <dimen name="button_size">45dp</dimen>
     <dimen name="bar_height">5dp</dimen>
     <dimen name="filename_item_text_size">16sp</dimen>
+    <dimen name="alert_size">20sp</dimen>
     <dimen name="file_item_text_size">13sp</dimen>
     <dimen name="pad">5dp</dimen>
+    <dimen name="margin_side">20dp</dimen>
 </resources>
