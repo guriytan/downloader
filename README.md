@@ -5,14 +5,12 @@
 **目前仅支持http\https的下载链接，而且仅支持单线程断点续传**
 
 下一步待补充的功能：
-* 增加文件打开功能
-* 完善okhttp请求响应，进一步优化下载任务的创建
-* 完善监控文件是否已删除功能
-* 优化界面
-* 增加多线程下载
-* 增加扫一扫下载文件功能
-* 增加解析磁力链接以及种子文件
-* 增加磁力链接以及种子文件下载
+* 文件打开、新建任务重命名
+* 优化下载任务的创建
+* 监控文件是否已删除功能
+* 多线程下载
+* 扫一扫下载文件功能
+* 解析磁力链接以及种子文件并下载
 
 ## APP截图：
-![](https://github.com/guriytan/downloader/raw/master/Screenshot_1563183656.png?raw=true)
+<img src="https://github.com/guriytan/downloader/raw/master/Screenshot.png" width = "300"/>
