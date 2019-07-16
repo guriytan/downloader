@@ -2,6 +2,9 @@ package org.guriytan.downloader.util;
 
 import org.guriytan.downloader.entity.DownloadTask;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringUtil {
 
     /**

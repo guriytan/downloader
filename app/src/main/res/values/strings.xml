@@ -30,6 +30,7 @@
     <string name="delete_fail">删除失败</string>
     <string name="create_success">创建成功</string>
     <string name="create_fail">创建失败</string>
+    <string name="error_url">链接不支持</string>
     <string name="check_net">请检查当前网络</string>
     <string name="check_mobile_net">当前设置为不允许流量下载</string>
     <string name="stack_task_fail">开始任务失败，无法获取下载资源</string>

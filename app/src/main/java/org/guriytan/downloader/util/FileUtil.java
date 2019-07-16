@@ -83,7 +83,7 @@ public class FileUtil {
                 return FILE_TYPE_MAP.get(fileTyle);
             }
         }
-        return R.drawable.ic_file;
+        return R.drawable.ic_normal_file;
     }
 
     // 创建文件夹

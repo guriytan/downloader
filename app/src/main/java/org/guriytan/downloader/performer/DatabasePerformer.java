@@ -25,7 +25,7 @@ public class DatabasePerformer {
 
     public List<DownloadTask> getAllTasks() {
         taskDao.detachAll();
-        return taskDao.loadAll();
+        return taskDao.queryBuilder().orderDesc(DownloadTaskDao.Properties.Id).list();
     }
 
     public boolean deleteTask(DownloadTask task) {

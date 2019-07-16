@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:padding="@dimen/fab_margin"
-            android:src="@drawable/ic_file" />
+            android:src="@drawable/ic_normal_file" />
 
         <LinearLayout
             android:layout_width="wrap_content"

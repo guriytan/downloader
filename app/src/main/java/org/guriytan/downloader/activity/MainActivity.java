@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -41,6 +40,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
@@ -106,17 +108,17 @@ public class MainActivity extends AppCompatActivity implements FileChooserDialog
 
     private void initialButton(FloatingActionButton fab) {
         fab.setOnClickListener(v ->
-            new MaterialDialog.Builder(this)
-                    .title(context.getString(R.string.url_download_placeholder))
-                    .inputType(InputType.TYPE_CLASS_TEXT)
-                    .input("", null, (dialog, input) -> {
-                        CreateDownloadTask create = new CreateDownloadTask(input.toString(), handler);
-                        create.execute();
-                    })
-                    .positiveText("确定")
-                    .neutralText("选择文件")
-                    .onNeutral((dialog, which) -> chooseTorrent())
-                    .show()
+                new MaterialDialog.Builder(this)
+                        .title(context.getString(R.string.url_download_placeholder))
+                        .inputType(InputType.TYPE_CLASS_TEXT)
+                        .input("", null, (dialog, input) -> {
+                            CreateDownloadTask create = new CreateDownloadTask(input.toString(), handler);
+                            new Thread(create).start();
+                        })
+                        .positiveText("确定")
+                        .neutralText("选择文件")
+                        .onNeutral((dialog, which) -> chooseTorrent())
+                        .show()
         );
     }
 
@@ -138,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements FileChooserDialog
     public void onFileChooserDismissed(@NonNull FileChooserDialog dialog) {
 
     }
+
     private Handler handler = new Handler(msg -> {
         if (msg.what == Constant.CREATE_SUCCESS) {
             DownloadPresenter.getInstance().addTask((DownloadTask) msg.obj);
@@ -170,9 +173,9 @@ public class MainActivity extends AppCompatActivity implements FileChooserDialog
     /**
      * 异步创建DownloadTask
      */
-    private static class CreateDownloadTask extends AsyncTask<String, Void, DownloadTask> {
-        String url;
-        Handler handler;
+    private static class CreateDownloadTask implements Runnable {
+        private String url;
+        private Handler handler;
 
         CreateDownloadTask(String url, Handler handler) {
             this.url = url;
@@ -180,47 +183,45 @@ public class MainActivity extends AppCompatActivity implements FileChooserDialog
         }
 
         @Override
-        protected void onPostExecute(DownloadTask task) {
-            Message msg = handler.obtainMessage();
-            if (task.getTaskStatus() != Constant.DOWNLOAD_FAIL) {
-                task.setDate(new Date());
-                task.setFilePath(Constant.DOWNLOAD_PATH);
-                task.setTaskId(StringUtil.generateTaskId(task));
-                msg.what = Constant.CREATE_SUCCESS;
-                msg.obj = task;
-            } else {
-                msg.what = Constant.CREATE_FAIL;
-            }
-            handler.sendMessage(msg);
-        }
-
-        // 获取下载长度和文件名
-        @Override
-        protected DownloadTask doInBackground(String... params) {
+        public void run() {
             DownloadTask task = new DownloadTask();
             task.setUrl(url);
             okhttp3.Request request = new okhttp3.Request.Builder()
                     .url(url)
                     .build();
-            try {
-                Response response = mClient.newCall(request).execute();
-                if (response.isSuccessful()) {
-                    long contentLength = response.body().contentLength();
-                    task.setFileSize(contentLength == 0 ? Constant.CREATE_FAIL : contentLength);
-                    if (contentLength == Constant.CREATE_FAIL) {
-                        task.setTaskStatus(Constant.DOWNLOAD_FAIL);
+            mClient.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.error_url));
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    if (response.isSuccessful()) {
+                        long contentLength = response.body().contentLength();
+                        task.setFileSize(contentLength == 0 ? Constant.CREATE_FAIL : contentLength);
+                        if (contentLength == Constant.CREATE_FAIL) {
+                            task.setTaskStatus(Constant.DOWNLOAD_FAIL);
+                        } else {
+                            task.setTaskStatus(Constant.DOWNLOAD_STOP);
+                        }
+                        String realUrl = response.request().url().toString();
+                        String fileName = realUrl.substring(realUrl.lastIndexOf("/") + 1);
+                        task.setFileName(fileName);
+                    } else task.setTaskStatus(Constant.DOWNLOAD_FAIL);
+                    Message msg = handler.obtainMessage();
+                    if (task.getTaskStatus() != Constant.DOWNLOAD_FAIL) {
+                        task.setDate(new Date());
+                        task.setFilePath(Constant.DOWNLOAD_PATH);
+                        task.setTaskId(StringUtil.generateTaskId(task));
+                        msg.what = Constant.CREATE_SUCCESS;
+                        msg.obj = task;
                     } else {
-                        task.setTaskStatus(Constant.DOWNLOAD_STOP);
+                        msg.what = Constant.CREATE_FAIL;
                     }
-                    String realUrl = response.request().url().toString();
-                    String fileName = realUrl.substring(realUrl.lastIndexOf("/") + 1);
-                    task.setFileName(fileName);
-                } else task.setTaskStatus(Constant.DOWNLOAD_FAIL);
-                response.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return task;
+                    handler.sendMessage(msg);
+                }
+            });
         }
     }
 }
