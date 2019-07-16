@@ -113,19 +113,17 @@ public class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setTitle(getString(R.string.url_download_placeholder))
                 .setCancelable(true)
-                .setPositiveButton(getString(R.string.confirm), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String url = editText.getText().toString();
-                        if (StringUtil.isHttpUrl(url)) {
-                            CreateDownloadTask task = new CreateDownloadTask(editText.getText().toString(), handler);
-                            new Thread(task).start();
-                        } else EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.create_fail));
-                    }
+                .setPositiveButton(getString(R.string.confirm), (dialog, which) -> {
+                    String url = editText.getText().toString();
+                    if (StringUtil.isHttpUrl(url)) {
+                        CreateDownloadTask task = new CreateDownloadTask(editText.getText().toString(), handler);
+                        new Thread(task).start();
+                    } else
+                        EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.create_fail));
                 })
                 .setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss())
                 .setNeutralButton(getString(R.string.title_choose_file), (dialog, which) -> chooseTorrent()).create();
-        fab.setOnClickListener(v ->createTask.show());
+        fab.setOnClickListener(v -> createTask.show());
     }
 
     private void chooseTorrent() {
