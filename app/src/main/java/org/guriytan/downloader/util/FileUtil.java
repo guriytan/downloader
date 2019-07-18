@@ -17,6 +17,7 @@ public class FileUtil {
     private static final String TAG = "FileUtil";
 
     private final static Map<String, Integer> FILE_TYPE_MAP = new HashMap<>();
+    private final static Map<String, String> FILE_MIME_TYPE_MAP = new HashMap<>();
 
     static {
         FILE_TYPE_MAP.put("bmp", R.drawable.ic_image_file);
@@ -81,6 +82,74 @@ public class FileUtil {
         FILE_TYPE_MAP.put("m4a", R.drawable.ic_audio_file);
     }
 
+    static {
+        FILE_MIME_TYPE_MAP.put("application/msaccess", ".mdb");
+        FILE_MIME_TYPE_MAP.put("application/msword", ".doc");
+        FILE_MIME_TYPE_MAP.put("application/pdf", ".pdf");
+        FILE_MIME_TYPE_MAP.put("application/postscript", ".ai");
+        FILE_MIME_TYPE_MAP.put("application/vnd.android.package-archive", ".apk");
+        FILE_MIME_TYPE_MAP.put("application/vnd.iphone", ".ipa");
+        FILE_MIME_TYPE_MAP.put("application/vnd.ms-excel", ".xls");
+        FILE_MIME_TYPE_MAP.put("application/vnd.ms-pki.seccat", ".cat");
+        FILE_MIME_TYPE_MAP.put("application/vnd.ms-powerpoint", ".ppt");
+        FILE_MIME_TYPE_MAP.put("application/vnd.rn-realmedia", ".rm");
+        FILE_MIME_TYPE_MAP.put("application/vnd.rn-realmedia-vbr", ".rmvb");
+        FILE_MIME_TYPE_MAP.put("application/vnd.visio", ".vst");
+        FILE_MIME_TYPE_MAP.put("application/x-bittorrent", ".torrent");
+        FILE_MIME_TYPE_MAP.put("application/x-bmp", ".bmp");
+        FILE_MIME_TYPE_MAP.put("application/x-cdr", ".cdr");
+        FILE_MIME_TYPE_MAP.put("application/x-dwf", ".dwf");
+        FILE_MIME_TYPE_MAP.put("application/x-dwg", ".dwg");
+        FILE_MIME_TYPE_MAP.put("application/x-dxf", ".dxf");
+        FILE_MIME_TYPE_MAP.put("application/x-emf", ".emf");
+        FILE_MIME_TYPE_MAP.put("application/x-epi", ".epi");
+        FILE_MIME_TYPE_MAP.put("application/x-ico", ".ico");
+        FILE_MIME_TYPE_MAP.put("application/x-igs", ".igs");
+        FILE_MIME_TYPE_MAP.put("application/x-img", ".img");
+        FILE_MIME_TYPE_MAP.put("application/x-javascript", ".js");
+        FILE_MIME_TYPE_MAP.put("application/x-jpg", ".jpg");
+        FILE_MIME_TYPE_MAP.put("application/x-latex", ".latex");
+        FILE_MIME_TYPE_MAP.put("application/x-mdb", ".mdb");
+        FILE_MIME_TYPE_MAP.put("application/x-msdownload", ".exe");
+        FILE_MIME_TYPE_MAP.put("application/x-netcdf", ".cdf");
+        FILE_MIME_TYPE_MAP.put("application/x-png", ".png");
+        FILE_MIME_TYPE_MAP.put("application/x-ppt", ".ppt");
+        FILE_MIME_TYPE_MAP.put("application/x-ps", ".eps");
+        FILE_MIME_TYPE_MAP.put("application/x-sam", ".sam");
+        FILE_MIME_TYPE_MAP.put("application/x-sat", ".sat");
+        FILE_MIME_TYPE_MAP.put("application/x-shockwave-flash", ".swf");
+        FILE_MIME_TYPE_MAP.put("application/x-tif", ".tif");
+        FILE_MIME_TYPE_MAP.put("application/x-vsd", ".vsd");
+        FILE_MIME_TYPE_MAP.put("application/x-vst", ".vst");
+        FILE_MIME_TYPE_MAP.put("application/x-xls", ".xls");
+        FILE_MIME_TYPE_MAP.put("audio/aiff", ".aiff");
+        FILE_MIME_TYPE_MAP.put("audio/mid", ".mid");
+        FILE_MIME_TYPE_MAP.put("audio/mp3", ".mp3");
+        FILE_MIME_TYPE_MAP.put("audio/wav", ".wav");
+        FILE_MIME_TYPE_MAP.put("audio/x-ms-wma", ".wma");
+        FILE_MIME_TYPE_MAP.put("audio/x-pn-realaudio-plugin", ".rpm");
+        FILE_MIME_TYPE_MAP.put("image/gif", ".gif");
+        FILE_MIME_TYPE_MAP.put("image/jpeg", ".jpg");
+        FILE_MIME_TYPE_MAP.put("image/png", ".png");
+        FILE_MIME_TYPE_MAP.put("image/tiff", ".tiff");
+        FILE_MIME_TYPE_MAP.put("image/x-icon", ".ico");
+        FILE_MIME_TYPE_MAP.put("java/*", ".java");
+        FILE_MIME_TYPE_MAP.put("Model/vnd.dwf", ".dwf");
+        FILE_MIME_TYPE_MAP.put("text/css", ".css");
+        FILE_MIME_TYPE_MAP.put("text/html", ".html");
+        FILE_MIME_TYPE_MAP.put("text/plain", ".txt");
+        FILE_MIME_TYPE_MAP.put("text/xml", ".svg");
+        FILE_MIME_TYPE_MAP.put("video/avi", ".avi");
+        FILE_MIME_TYPE_MAP.put("video/mpeg4", ".mp4");
+        FILE_MIME_TYPE_MAP.put("video/mpg", ".mpeg");
+        FILE_MIME_TYPE_MAP.put("video/x-mpg", ".mpa");
+        FILE_MIME_TYPE_MAP.put("video/x-ms-asf", ".asf");
+        FILE_MIME_TYPE_MAP.put("video/x-ms-wm", ".wm");
+        FILE_MIME_TYPE_MAP.put("video/x-ms-wmv", ".wmv");
+        FILE_MIME_TYPE_MAP.put("video/x-ms-wmx", ".wmx");
+        FILE_MIME_TYPE_MAP.put("video/x-sgi-movie", ".movie");
+    }
+
     /**
      * 根据文件名获取文件类型
      *
@@ -96,6 +165,19 @@ public class FileUtil {
             }
         }
         return R.drawable.ic_normal_file;
+    }
+
+    /**
+     * 根据Content-Type返回文件类型
+     *
+     * @param type Content-Type
+     * @return 文件后缀名
+     */
+    public static String getSuffix(String type) {
+        if (FILE_MIME_TYPE_MAP.containsKey(type)) {
+            return FILE_MIME_TYPE_MAP.get(type);
+        }
+        return null;
     }
 
     /**

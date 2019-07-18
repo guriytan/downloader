@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.Call;
+import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
 import retrofit2.internal.EverythingIsNonNull;
@@ -357,20 +358,39 @@ public class DownloadManager extends Handler {
                 sendMsg(Constant.MSG_ERROR, "添加任务失败");
                 return;
             }
-            long contentLength = response.body().contentLength();
-            if (contentLength == -1) {
+            Headers headers = response.headers();
+            for (int i = 0; i < headers.size(); i++) {
+                Log.d(TAG, headers.name(i) + ":" + headers.value(i));
+            }
+            Log.d(TAG, "URL:" + response.request().url().toString());
+            if (info.getFileName() == null) { // 若文件名未定义则根据响应url生成文件名
+                String realName = response.header("Content-Disposition"); //attachment;filename=FileName.txt
+                if (realName != null) {
+                    info.setFileName(realName.substring(realName.lastIndexOf("filename=") + 9));
+                } else {
+                    String contentType = response.header("Content-Type"); // MIME-Type
+                    if (contentType != null) {
+                        String suffix = FileUtil.getSuffix(contentType);// 根据MIME-Type获得文件后缀名
+                        if (suffix != null) {
+                            String realUrl = response.request().url().toString();
+                            String fileName = realUrl.substring(realUrl.lastIndexOf("/") + 1, realUrl.lastIndexOf(suffix));
+                            info.setFileName(fileName + suffix);
+                        }
+                    } else {
+                        sendMsg(Constant.MSG_ERROR, "下载文件不支持");
+                        return;
+                    }
+                }
+            }
+            String contentLength = response.header("Content-Length");
+            if (contentLength == null) {
                 IOUtil.close(response.body());
                 Log.e(TAG, "添加任务失败：contentLength == -1");
                 sendMsg(Constant.MSG_ERROR, "添加任务失败");
                 return;
             }
-            info.setFileSize(contentLength); // 设置资源大小
+            info.setFileSize(Long.valueOf(contentLength)); // 设置资源大小
             info.setTaskStatus(Constant.MSG_PAUSE); // 设置任务状态为正常
-            if (info.getFileName() == null) { // 若文件名未定义则根据响应url生成文件名
-                String realUrl = response.request().url().toString();
-                String fileName = realUrl.substring(realUrl.lastIndexOf("/") + 1);
-                info.setFileName(fileName);
-            }
             try {
                 commit();
             } catch (IOException e) {
@@ -381,6 +401,7 @@ public class DownloadManager extends Handler {
 
         /**
          * 提交数据库事务
+         *
          * @throws IOException 文件异常
          */
         private synchronized void commit() throws IOException {
