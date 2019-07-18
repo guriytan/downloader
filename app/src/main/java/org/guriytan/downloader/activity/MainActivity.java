@@ -2,7 +2,6 @@ package org.guriytan.downloader.activity;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -19,8 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.Handler;
-import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,46 +28,46 @@ import org.greenrobot.eventbus.EventBus;
 import org.guriytan.downloader.Constant;
 import org.guriytan.downloader.R;
 import org.guriytan.downloader.adapter.DownloadAdapter;
-import org.guriytan.downloader.entity.DownloadTask;
-import org.guriytan.downloader.entity.MessageEvent;
-import org.guriytan.downloader.presenter.DownloadPresenter;
+import org.guriytan.downloader.entity.Result;
+import org.guriytan.downloader.manager.DownloadManager;
 import org.guriytan.downloader.util.AppTools;
 import org.guriytan.downloader.util.FileUtil;
-import org.guriytan.downloader.util.StringUtil;
 
-import java.io.IOException;
-import java.util.Date;
+import java.io.File;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Response;
-
+/**
+ * 主页面
+ */
 public class MainActivity extends AppCompatActivity {
-    private static OkHttpClient mClient; // OKHttpClient;
     private Context context;
+    private DownloadManager downloadManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 获取数据库操作类，用于退出时使下载任务全部暂停
+        downloadManager = DownloadManager.getInstance();
+        // 创建下载文件夹
+        FileUtil.mkdirs(new File(AppTools.getDownloadPath()));
 
-        FileUtil.mkdirs(AppTools.getDownloadPath());
-
-        mClient = new OkHttpClient.Builder().build();
         context = getApplicationContext();
         setContentView(R.layout.activity_main);
-
+        // 设置RecyclerView用于显示每条下载任务
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         initialViewPage(recyclerView);
-
+        // 添加下载任务入口
         FloatingActionButton fab = findViewById(R.id.fab);
         initialButton(fab);
-
+        // 工具栏
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        // 检查权限
         checkPermission();
     }
 
+    /**
+     * 若APP没有存储空间权限则主动申请
+     */
     private void checkPermission() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -79,8 +76,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 若用户不给予权限则退出
+     *
+     * @param requestCode  请求状态码
+     * @param permissions  权限数据
+     * @param grantResults 是否得到权限
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // 若用户不给予权限则退出
         if (grantResults.length == 0
                 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
             finish();
@@ -89,23 +94,37 @@ public class MainActivity extends AppCompatActivity {
 
     private long exitTime = 0;
 
+    /**
+     * 双击退出程序
+     */
     @Override
     public void onBackPressed() {
+
         if (System.currentTimeMillis() - exitTime > 2000) {
             Toast.makeText(context, getResources().getString(R.string.exist_check), Toast.LENGTH_SHORT).show();
             exitTime = System.currentTimeMillis();
         } else super.onBackPressed();
     }
 
+    /**
+     * 向recyclerView加载布局并注册adpater
+     *
+     * @param recyclerView 显示窗口
+     */
     private void initialViewPage(RecyclerView recyclerView) {
         LinearLayoutManager manager = new LinearLayoutManager(context,
                 RecyclerView.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
-        // recyclerView注册adpater
+        //
         DownloadAdapter downloadAdapter = new DownloadAdapter(this, recyclerView);
         recyclerView.setAdapter(downloadAdapter);
     }
 
+    /**
+     * 设置添加任务弹窗
+     *
+     * @param fab 悬浮按钮
+     */
     private void initialButton(FloatingActionButton fab) {
         View view = getLayoutInflater().inflate(R.layout.item_url_input, null);
         EditText editText = view.findViewById(R.id.text_input_dialog);
@@ -113,19 +132,15 @@ public class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setTitle(getString(R.string.url_download_placeholder))
                 .setCancelable(true)
-                .setPositiveButton(getString(R.string.confirm), (dialog, which) -> {
-                    String url = editText.getText().toString();
-                    if (StringUtil.isHttpUrl(url)) {
-                        CreateDownloadTask task = new CreateDownloadTask(editText.getText().toString(), handler);
-                        new Thread(task).start();
-                    } else
-                        EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.create_fail));
-                })
+                .setPositiveButton(getString(R.string.confirm), (dialog, which) -> EventBus.getDefault().post(new Result(Constant.MSG_CREATE, editText.getText().toString())))
                 .setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss())
                 .setNeutralButton(getString(R.string.title_choose_file), (dialog, which) -> chooseTorrent()).create();
         fab.setOnClickListener(v -> createTask.show());
     }
 
+    /**
+     * 设置添加种子文件弹窗，目前未实现种子下载
+     */
     private void chooseTorrent() {
         new ChooserDialog(MainActivity.this)
                 .withFilter(false, false, Constant.SUFFIX)
@@ -137,21 +152,24 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    private Handler handler = new Handler(msg -> {
-        if (msg.what == Constant.CREATE_SUCCESS) {
-            DownloadPresenter.getInstance().addTask((DownloadTask) msg.obj);
-        } else {
-            EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.create_fail));
-        }
-        return false;
-    });
-
+    /**
+     * 加载菜单
+     *
+     * @param menu 菜单
+     * @return true为成功
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * 菜单设置行为
+     *
+     * @param item 菜单选项
+     * @return true
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -167,57 +185,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 异步创建DownloadTask
+     * 退出时使所有正在下载的任务暂停
      */
-    private static class CreateDownloadTask implements Runnable {
-        private String url;
-        private Handler handler;
-
-        CreateDownloadTask(String url, Handler handler) {
-            this.url = url;
-            this.handler = handler;
-        }
-
-        @Override
-        public void run() {
-            DownloadTask task = new DownloadTask();
-            task.setUrl(url);
-            okhttp3.Request request = new okhttp3.Request.Builder()
-                    .url(url)
-                    .build();
-            mClient.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    EventBus.getDefault().post(new MessageEvent(Constant.ERROR_ALERT, R.string.error_url));
-                }
-
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) {
-                    if (response.isSuccessful()) {
-                        long contentLength = response.body().contentLength();
-                        task.setFileSize(contentLength == 0 ? Constant.CREATE_FAIL : contentLength);
-                        if (contentLength == Constant.CREATE_FAIL) {
-                            task.setTaskStatus(Constant.DOWNLOAD_FAIL);
-                        } else {
-                            task.setTaskStatus(Constant.DOWNLOAD_STOP);
-                        }
-                        String realUrl = response.request().url().toString();
-                        String fileName = realUrl.substring(realUrl.lastIndexOf("/") + 1);
-                        task.setFileName(fileName);
-                    } else task.setTaskStatus(Constant.DOWNLOAD_FAIL);
-                    Message msg = handler.obtainMessage();
-                    if (task.getTaskStatus() != Constant.DOWNLOAD_FAIL) {
-                        task.setDate(new Date());
-                        task.setFilePath(Constant.DOWNLOAD_PATH);
-                        task.setTaskId(StringUtil.generateTaskId(task));
-                        msg.what = Constant.CREATE_SUCCESS;
-                        msg.obj = task;
-                    } else {
-                        msg.what = Constant.CREATE_FAIL;
-                    }
-                    handler.sendMessage(msg);
-                }
-            });
-        }
+    @Override
+    protected void onDestroy() {
+        downloadManager.pauseAll();
+        super.onDestroy();
     }
 }

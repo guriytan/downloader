@@ -3,6 +3,9 @@ package org.guriytan.downloader.util;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
+/**
+ * MD5工具类
+ */
 class MD5Util {
 
     private static final String[] hexDigIts = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"};
@@ -23,6 +26,12 @@ class MD5Util {
         return null;
     }
 
+    /**
+     * byte数据转换十六进制字符串
+     *
+     * @param bytes byte数组
+     * @return 字符串
+     */
     private static String byteArrayToHexString(byte[] bytes) {
         StringBuilder resultSb = new StringBuilder();
         for (byte b : bytes) {
@@ -31,6 +40,12 @@ class MD5Util {
         return resultSb.toString();
     }
 
+    /**
+     * byte转换十六进制字符串
+     *
+     * @param b byte字节
+     * @return 字符串
+     */
     private static String byteToHexString(byte b) {
         int n = b;
         if (n < 0) {

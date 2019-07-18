@@ -32,8 +32,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
     implementation 'androidx.preference:preference:1.1.0-rc01'
 
-    implementation "io.reactivex.rxjava2:rxjava:2.2.10"
-    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation "com.squareup.retrofit2:retrofit:2.6.0"
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'org.greenrobot:greendao:3.2.2'
@@ -50,7 +48,7 @@ dependencies {
 
 android {
     greendao {
-        schemaVersion 4
+        schemaVersion 2
         daoPackage 'org.guriytan.downloader.dao'
         targetGenDir 'src/main/java'
     }

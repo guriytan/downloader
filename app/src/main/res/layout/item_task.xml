@@ -107,7 +107,6 @@
                         android:ellipsize="end"
                         android:gravity="center_vertical"
                         android:maxLines="1"
-                        android:text="@string/down_speed"
                         android:textSize="@dimen/file_item_text_size"/>
                 </LinearLayout>
 

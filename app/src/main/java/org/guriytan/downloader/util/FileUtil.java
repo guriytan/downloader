@@ -1,14 +1,20 @@
 package org.guriytan.downloader.util;
 
 import android.os.Environment;
+import android.util.Log;
 
 import org.guriytan.downloader.R;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 文件工具类
+ */
 public class FileUtil {
+    private static final String TAG = "FileUtil";
 
     private final static Map<String, Integer> FILE_TYPE_MAP = new HashMap<>();
 
@@ -75,6 +81,12 @@ public class FileUtil {
         FILE_TYPE_MAP.put("m4a", R.drawable.ic_audio_file);
     }
 
+    /**
+     * 根据文件名获取文件类型
+     *
+     * @param fileName 文件名
+     * @return 文件类型代码，对应图标
+     */
     public static int getType(String fileName) {
         int doIndex = fileName.lastIndexOf(".");
         if (doIndex != -1) {
@@ -86,18 +98,57 @@ public class FileUtil {
         return R.drawable.ic_normal_file;
     }
 
-    // 创建文件夹
-    public static void mkdirs(String configPath) {
-        File file = new File(configPath);
+    /**
+     * 创建文件夹
+     *
+     * @param file 创建文件夹
+     */
+    public static void mkdirs(File file) {
         if (!file.exists()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                Log.e(TAG, "创建文件夹" + file.getAbsolutePath() + "失败");
+            }
+        }
+    }
+
+    /**
+     * 创建文件
+     *
+     * @param file 文件对象
+     */
+    public static void createFile(File file) {
+        try {
+            if (!file.exists()) {
+                if (!file.createNewFile()) {
+                    Log.e(TAG, "创建文件" + file.getAbsolutePath() + "失败");
+                }
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "创建文件" + file.getAbsolutePath() + "失败");
         }
     }
 
     /**
      * 获取SD路径
+     *
+     * @return SD路径
      */
     public static String getSDCardPath() {
         return Environment.getExternalStorageDirectory().getAbsolutePath();
+    }
+
+    /**
+     * 删除文件
+     *
+     * @param files 文件
+     */
+    public static void cleanFile(File... files) {
+        for (File f : files) {
+            if (f != null && f.exists()) {
+                if (!f.delete()) {
+                    Log.e(TAG, "删除文件" + f.getAbsolutePath() + "失败");
+                }
+            }
+        }
     }
 }

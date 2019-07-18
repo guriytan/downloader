@@ -16,6 +16,9 @@ import org.guriytan.downloader.R;
 import org.guriytan.downloader.Constant;
 import org.guriytan.downloader.application.App;
 
+/**
+ * 设置页面
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPreferences;
@@ -26,15 +29,23 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings_activity);
         ActionBar actionBar = getSupportActionBar();
+        // 返回主页
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        // 全局设置
         sharedPreferences = App.getSharedPreferences();
         initialTextView();
         initialSwitch();
         initialSeekBar();
     }
 
+    /**
+     * 用finish()方法销毁当前页面
+     *
+     * @param item 菜单选项
+     * @return true
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
@@ -44,11 +55,17 @@ public class SettingsActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * 物理返回按钮行为
+     */
     @Override
     public void onBackPressed() {
         finish();
     }
 
+    /**
+     * 下载路径设置
+     */
     private void initialTextView() {
         final String path = sharedPreferences.getString(Constant.DOWNLOAD_PATH_KEY, Constant.DOWNLOAD_PATH);
         local_path = findViewById(R.id.local_path);
@@ -66,6 +83,9 @@ public class SettingsActivity extends AppCompatActivity {
                 .show());
     }
 
+    /**
+     * 是否允许移动网络下载设置
+     */
     private void initialSwitch() {
         boolean check = sharedPreferences.getBoolean(Constant.ALLOW_MOBILE_NET_KEY, Constant.ALLOW_MOBILE_NET);
         Switch allow_mobile = findViewById(R.id.mobile_net);
@@ -77,6 +97,9 @@ public class SettingsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 同时最大下载数设置
+     */
     private void initialSeekBar() {
         int maximum = sharedPreferences.getInt(Constant.MAXIMUM_DOWNLOAD_KEY, Constant.MAXIMUM_DOWNLOAD);
         SeekBar seekBar = findViewById(R.id.maximum_download);
