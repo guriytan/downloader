@@ -254,6 +254,8 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             remainingTime.setText(String.format(itemView.getResources().getString(R.string.remaining_time), StringUtil.formatFromSecond((int) time)));
             double f1 = new BigDecimal((float) info.getDownloadSize() / info.getFileSize()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
             progressBar.setProgress((int) (f1 * 100));
+            downSize.setText(String.format(itemView.getResources().getString(R.string.down_count),
+                    StringUtil.convertFileSize(info.getDownloadSize()), StringUtil.convertFileSize(info.getFileSize()), (int) progressBar.getProgress()));
         }
         /**
          * 任务暂停则刷新并显示暂停
