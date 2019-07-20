@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 
 import org.guriytan.downloader.Constant;
 import org.guriytan.downloader.callback.DownloadCallback;
+import org.guriytan.downloader.util.AppTools;
 import org.guriytan.downloader.util.FileUtil;
 import org.guriytan.downloader.util.HttpUtil;
 import org.guriytan.downloader.util.IOUtil;
@@ -50,17 +51,21 @@ public class DownloadTask extends Handler {
     private volatile boolean reset; // 是否重置下载
     private volatile boolean delete; // 是否删除下载
 
-    private TaskInfo info;
+    private TaskInfo info; // 任务信息
     private DownloadCallback callback; // 下载回调监听
 
     /**
      * 任务管理器初始化数据
+     *
+     * @param info             初始化任务信息
+     * @param callback         任务回调
+     * @param waitQueueHandler 等待队列回调
      */
     public DownloadTask(TaskInfo info, DownloadCallback callback, Handler waitQueueHandler) {
         this.info = info;
         this.callback = callback;
         this.waitQueueHandler = waitQueueHandler;
-        this.THREAD_COUNT = info.getThreadNumber();
+        this.THREAD_COUNT = AppTools.getThreadNumber();
         this.progresses = new long[THREAD_COUNT];
         this.cacheFiles = new File[THREAD_COUNT];
         this.httpUtil = HttpUtil.getInstance();
@@ -70,6 +75,8 @@ public class DownloadTask extends Handler {
 
     /**
      * 任务回调消息
+     *
+     * @param msg 消息
      */
     @Override
     public void handleMessage(@NonNull Message msg) {
@@ -319,19 +326,25 @@ public class DownloadTask extends Handler {
         delete = true;
     }
 
-    // 删除全部临时文件
+    /**
+     * 删除全部临时文件
+     */
     public void clearAll() {
         allocateThread();
         FileUtil.cleanFile(tmpFile);
         clearCache();
     }
 
-    // 删除存放线程起点文件
+    /**
+     * 删除存放线程起点文件
+     */
     private void clearCache() {
         FileUtil.cleanFile(cacheFiles);
     }
 
-    // 若线程起点文件未初始化则进行初始化操作
+    /**
+     * 若线程起点文件未初始化则进行初始化操作
+     */
     private void allocateThread() {
         tmpFile = new File(info.getFilePath(), info.getFileName() + ".tmp");
         for (int threadId = 0; threadId < THREAD_COUNT; threadId++) {
@@ -344,12 +357,20 @@ public class DownloadTask extends Handler {
 
     /**
      * 确认下载状态
+     *
+     * @param count 下载状态
+     * @return 是否达到线程总数
      */
     private boolean confirmStatus(AtomicInteger count) {
         return count.incrementAndGet() % THREAD_COUNT != 0;
     }
 
-    // 发送消息
+    /**
+     * 发送消息
+     *
+     * @param type 消息类型
+     * @param msg  消息内容
+     */
     private void sendMsg(int type, String msg) {
         Message message = new Message();
         message.what = type;

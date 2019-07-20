@@ -1,5 +1,6 @@
 package org.guriytan.downloader.manager;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -7,14 +8,18 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import org.guriytan.downloader.Constant;
+import org.guriytan.downloader.R;
+import org.guriytan.downloader.application.App;
 import org.guriytan.downloader.callback.DownloadCallback;
 import org.guriytan.downloader.callback.ResultCallback;
 import org.guriytan.downloader.entity.DownloadTask;
 import org.guriytan.downloader.entity.Result;
 import org.guriytan.downloader.entity.TaskInfo;
+import org.guriytan.downloader.util.AppTools;
 import org.guriytan.downloader.util.FileUtil;
 import org.guriytan.downloader.util.HttpUtil;
 import org.guriytan.downloader.util.IOUtil;
+import org.guriytan.downloader.util.NetUtil;
 import org.guriytan.downloader.util.StringUtil;
 
 import java.io.File;
@@ -27,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.Call;
-import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
 import retrofit2.internal.EverythingIsNonNull;
@@ -39,15 +43,12 @@ import retrofit2.internal.EverythingIsNonNull;
 public class DownloadManager extends Handler {
     private static final String TAG = "DownloadManager";
 
-    private static String DOWNLOAD_PATH = Constant.DOWNLOAD_PATH; // 默认下载目录
-    private static int MAXIMUM_DOWNLOAD = Constant.MAXIMUM_DOWNLOAD; // 最大同时下载任务数
-    private static int THREAD_NUMBER = Constant.THREAD_NUMBER; // 单个下载任务线程数
-
     private static DownloadManager downloadManager; // 单例模式
 
     private static DatabaseManager databaseManager; // 数据库操作类
     private static ResultCallback resultCallback; // 消息回调，默认为空，可通过构造器实现
     private static HttpUtil httpUtil; // okHttp工具类
+    private Context context; // 上下文
 
     private static Map<String, DownloadTask> downloadCache; // 下载任务缓存池，String为taskId，用来操作下载任务
     private static Map<String, TaskInfo> downloadQueue; // 文件下载队列，String为taskId，用来更新数据并操纵下载缓存
@@ -69,7 +70,18 @@ public class DownloadManager extends Handler {
         return downloadManager;
     }
 
-    // 构造器模式，增加消息回调
+    /**
+     * 更新任务信息
+     *
+     * @param info 任务信息
+     */
+    public void update(TaskInfo info) {
+        databaseManager.updateTask(info);
+    }
+
+    /**
+     * 构造器模式，增加消息回调
+     */
     public static final class Builder {
         public Builder initialCallback(ResultCallback callback) {
             resultCallback = callback;
@@ -83,6 +95,7 @@ public class DownloadManager extends Handler {
 
     private DownloadManager() {
         databaseManager = DatabaseManager.getInstance();
+        context = App.getContext();
         downloadCache = new HashMap<>();
         downloadQueue = new HashMap<>();
         waitQueue = new LinkedHashMap<>();
@@ -91,6 +104,8 @@ public class DownloadManager extends Handler {
 
     /**
      * 添加下载任务
+     *
+     * @param url 下载链接
      */
     public void add(String url) {
         add(url, null);
@@ -98,6 +113,9 @@ public class DownloadManager extends Handler {
 
     /**
      * 添加下载任务，可重命名文件
+     *
+     * @param url      下载链接
+     * @param fileName 需要重命名的名字
      */
     public void add(String url, String fileName) {
         if (StringUtil.isHttpUrl(url)) {
@@ -116,7 +134,7 @@ public class DownloadManager extends Handler {
 
             // 异步创建DownloadTask
             httpUtil.doAsync(request, new RequestCallback(info));
-        } else sendMsg(Constant.MSG_ERROR, "添加任务失败");
+        } else sendMsg(Constant.MSG_ERROR, context.getString(R.string.create_fail));
     }
 
     /**
@@ -126,21 +144,29 @@ public class DownloadManager extends Handler {
      * @param callback 下载回调
      */
     public void download(TaskInfo info, DownloadCallback callback) {
-        // 若当前下载数大于最大同时下载数则添加至等待队列
-        if (downloadQueue.size() >= MAXIMUM_DOWNLOAD) {
-            waitQueue.put(info, callback);
-            callback.onWait(); // 设置下载回调为等待状态
+        // 判断网络类型
+        int netType = NetUtil.getNetType();
+        if (netType == Constant.NET_TYPE_UNKNOWN) {
+            resultCallback.onError(new Result(Constant.MSG_ERROR, context.getString(R.string.check_net)));
+        } else if (!AppTools.isAllowMobileNet() && netType == Constant.NET_TYPE_MOBILE) {
+            resultCallback.onError(new Result(Constant.MSG_ERROR, context.getString(R.string.check_mobile_net)));
         } else {
-            String key = info.getTaskId();
-            // 添加至下载队列
-            downloadQueue.put(key, info);
-            // 若下载任务缓存池存在则直接开始下载，否则加入至下载任务缓存池
-            if (downloadCache.containsKey(key)) {
-                downloadCache.get(key).start();
+            // 若当前下载数大于最大同时下载数则添加至等待队列
+            if (downloadQueue.size() >= AppTools.getMaximumDownload()) {
+                waitQueue.put(info, callback);
+                callback.onWait(); // 设置下载回调为等待状态
             } else {
-                DownloadTask task = new DownloadTask(info, callback, this);
-                downloadCache.put(key, task);
-                task.start();
+                String key = info.getTaskId();
+                // 添加至下载队列
+                downloadQueue.put(key, info);
+                // 若下载任务缓存池存在则直接开始下载，否则加入至下载任务缓存池
+                if (downloadCache.containsKey(key)) {
+                    downloadCache.get(key).start();
+                } else {
+                    DownloadTask task = new DownloadTask(info, callback, this);
+                    downloadCache.put(key, task);
+                    task.start();
+                }
             }
         }
     }
@@ -166,6 +192,8 @@ public class DownloadManager extends Handler {
 
     /**
      * 多任务暂停下载
+     *
+     * @param list 多个任务
      */
     public void pause(List<TaskInfo> list) {
         for (TaskInfo info : list) {
@@ -177,6 +205,7 @@ public class DownloadManager extends Handler {
      * 重新下载，若已绑定监听器则通过监听器读取结果，若未绑定则可以通过返回boolean类型判断结果
      *
      * @param info 任务信息
+     * @return 是否重置成功
      */
     public boolean reset(TaskInfo info) {
         String key = info.getTaskId();
@@ -206,10 +235,9 @@ public class DownloadManager extends Handler {
             // 重新设置下载任务
             info.setDownloadSize(0);
             info.setTaskStatus(Constant.MSG_PAUSE);
-            info.setThreadNumber(THREAD_NUMBER);
         } catch (Exception e) {
             Log.e(TAG, "重新下载任务失败：" + e.toString());
-            sendMsg(Constant.MSG_ERROR, "重新下载失败");
+            sendMsg(Constant.MSG_ERROR, context.getString(R.string.re_download_fail));
             return false;
         }
         return true;
@@ -217,6 +245,10 @@ public class DownloadManager extends Handler {
 
     /**
      * 删除，若已绑定监听器则通过监听器读取结果，若未绑定则可以通过返回boolean类型判断结果
+     *
+     * @param info       任务信息
+     * @param deleteFile 是否删除文件
+     * @return 是否删除成功
      */
     public boolean delete(TaskInfo info, boolean deleteFile) {
         String key = info.getTaskId();
@@ -247,16 +279,19 @@ public class DownloadManager extends Handler {
             databaseManager.deleteTask(info);
         } catch (Exception e) {
             Log.e(TAG, "删除下载任务失败：" + e.toString());
-            sendMsg(Constant.MSG_ERROR, "删除失败");
+            sendMsg(Constant.MSG_ERROR, context.getString(R.string.delete_fail));
             return false;
         }
         // 发送删除状态
-        sendMsg(Constant.MSG_SUCCESS, "删除成功");
+        sendMsg(Constant.MSG_SUCCESS, context.getString(R.string.delete_success));
         return true;
     }
 
     /**
      * 多任务删除下载
+     *
+     * @param list       多任务
+     * @param deleteFile 是否删除文件
      */
     public void delete(List<TaskInfo> list, boolean deleteFile) {
         for (TaskInfo info : list) {
@@ -347,7 +382,7 @@ public class DownloadManager extends Handler {
         @Override
         public void onFailure(Call call, IOException e) {
             Log.e(TAG, "添加任务失败：" + e.getMessage());
-            sendMsg(Constant.MSG_ERROR, "添加任务失败");
+            sendMsg(Constant.MSG_ERROR, context.getString(R.string.create_fail));
         }
 
         @Override
@@ -355,14 +390,9 @@ public class DownloadManager extends Handler {
             if (response.code() != 200) {
                 IOUtil.close(response.body());
                 Log.e(TAG, "添加任务请求长度失败：" + response.code());
-                sendMsg(Constant.MSG_ERROR, "添加任务失败");
+                sendMsg(Constant.MSG_ERROR, context.getString(R.string.create_fail));
                 return;
             }
-            Headers headers = response.headers();
-            for (int i = 0; i < headers.size(); i++) {
-                Log.d(TAG, headers.name(i) + ":" + headers.value(i));
-            }
-            Log.d(TAG, "URL:" + response.request().url().toString());
             if (info.getFileName() == null) { // 若文件名未定义则根据响应url生成文件名
                 String realName = response.header("Content-Disposition"); //attachment;filename=FileName.txt
                 if (realName != null) {
@@ -377,7 +407,7 @@ public class DownloadManager extends Handler {
                             info.setFileName(fileName + suffix);
                         }
                     } else {
-                        sendMsg(Constant.MSG_ERROR, "下载文件不支持");
+                        sendMsg(Constant.MSG_ERROR, context.getString(R.string.un_support_utl));
                         return;
                     }
                 }
@@ -386,7 +416,7 @@ public class DownloadManager extends Handler {
             if (contentLength == null) {
                 IOUtil.close(response.body());
                 Log.e(TAG, "添加任务失败：contentLength == -1");
-                sendMsg(Constant.MSG_ERROR, "添加任务失败");
+                sendMsg(Constant.MSG_ERROR, context.getString(R.string.create_fail));
                 return;
             }
             info.setFileSize(Long.valueOf(contentLength)); // 设置资源大小
@@ -395,7 +425,7 @@ public class DownloadManager extends Handler {
                 commit();
             } catch (IOException e) {
                 Log.e(TAG, "添加任务失败：" + e.getMessage());
-                sendMsg(Constant.MSG_ERROR, "添加任务失败");
+                sendMsg(Constant.MSG_ERROR, context.getString(R.string.create_fail));
             }
         }
 
@@ -406,9 +436,8 @@ public class DownloadManager extends Handler {
          */
         private synchronized void commit() throws IOException {
             info.setDate(new Date()); // 设置日期
-            info.setFilePath(DOWNLOAD_PATH); // 设置下载路径
+            info.setFilePath(AppTools.getDownloadPath()); // 设置下载路径
             info.setTaskId(StringUtil.generateTaskId(info)); // 设置任务识别码
-            info.setThreadNumber(THREAD_NUMBER);
             TaskInfo result = databaseManager.getTask(info.getTaskId());
             if (result == null) {
                 // 若文件系统有相同文件则将文件名加一
@@ -429,67 +458,13 @@ public class DownloadManager extends Handler {
                     IOUtil.close(tmpAccessFile);
                     // 提交数据库
                     databaseManager.addTask(info);
-                    sendMsg(Constant.MSG_SUCCESS, "添加任务成功");
+                    sendMsg(Constant.MSG_SUCCESS, context.getString(R.string.create_success));
                 } else {
-                    sendMsg(Constant.MSG_ERROR, "添加任务失败");
+                    sendMsg(Constant.MSG_ERROR, context.getString(R.string.create_fail));
                 }
             } else {
-                sendMsg(Constant.MSG_ERROR, "任务已存在");
+                sendMsg(Constant.MSG_ERROR, context.getString(R.string.task_exist));
             }
         }
-    }
-
-    /**
-     * 设置默认下载目录
-     *
-     * @param downloadPath 默认下载目录
-     */
-    public static void setDownloadPath(String downloadPath) {
-        DOWNLOAD_PATH = downloadPath;
-    }
-
-    /**
-     * 设置最大同时下载任务数
-     *
-     * @param maximumDownload 最大同时下载任务数
-     */
-    public static void setMaximumDownload(int maximumDownload) {
-        MAXIMUM_DOWNLOAD = maximumDownload;
-    }
-
-    /**
-     * 设置单个下载任务线程数
-     *
-     * @param threadNumber 单个下载任务线程数
-     */
-    public static void setThreadNumber(int threadNumber) {
-        THREAD_NUMBER = threadNumber;
-    }
-
-    /**
-     * 获得单个下载任务线程数
-     *
-     * @return 单个下载任务线程数
-     */
-    public static int getThreadNumber() {
-        return THREAD_NUMBER;
-    }
-
-    /**
-     * 获得默认下载目录
-     *
-     * @return 默认下载目录
-     */
-    public static String getDownloadPath() {
-        return DOWNLOAD_PATH;
-    }
-
-    /**
-     * 获得最大同时下载任务数
-     *
-     * @return 最大同时下载任务数
-     */
-    public static int getMaximumDownload() {
-        return MAXIMUM_DOWNLOAD;
     }
 }

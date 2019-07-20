@@ -1,6 +1,7 @@
 package org.guriytan.downloader.application;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import org.guriytan.downloader.Constant;
@@ -14,6 +15,7 @@ import org.guriytan.downloader.dao.TaskInfoDao;
 public class App extends Application {
     private static SharedPreferences sharedPreferences;
     private static TaskInfoDao taskInfoDao;
+    private static Context context;
 
     @Override
     public void onCreate() {
@@ -24,6 +26,8 @@ public class App extends Application {
         DaoMaster daoMaster = new DaoMaster(devOpenHelper.getWritableDb());
         DaoSession daoSession = daoMaster.newSession();
         taskInfoDao = daoSession.getTaskInfoDao();
+
+        context  = getApplicationContext();
     }
 
     /**
@@ -42,5 +46,13 @@ public class App extends Application {
      */
     public static TaskInfoDao getDownloadTaskDao() {
         return taskInfoDao;
+    }
+
+    /**
+     * 返回全局上下文
+     * @return 上下文
+     */
+    public static Context getContext() {
+        return context;
     }
 }

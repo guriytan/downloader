@@ -8,8 +8,6 @@ import org.guriytan.downloader.util.FileUtil;
 public class Constant {
     // SharedPreferences名称
     public static final String APP_SETTING = "app_setting";
-    // 单个下载任务线程数
-    public static final int THREAD_NUMBER = 4;
     // 默认数据库名称
     public static final String DB_NAME = "info.db";
     // 默认存储路径
@@ -18,6 +16,9 @@ public class Constant {
     // 默认最大同时下载任务数
     public static final int MAXIMUM_DOWNLOAD = 3;
     public static final String MAXIMUM_DOWNLOAD_KEY = "MAXIMUM_DOWNLOAD";
+    // 单个下载任务线程数
+    public static final int THREAD_NUMBER = 4;
+    public static final String THREAD_NUMBER_KEY = "THREAD_NUMBER";
     // 默认不允许使用流量下载
     public static final boolean ALLOW_MOBILE_NET = false;
     public static final String ALLOW_MOBILE_NET_KEY = "ALLOW_MOBILE_NET";

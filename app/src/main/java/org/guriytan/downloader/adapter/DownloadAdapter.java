@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -30,6 +29,7 @@ import org.guriytan.downloader.manager.DownloadManager;
 import org.guriytan.downloader.util.FileUtil;
 import org.guriytan.downloader.util.StringUtil;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -44,7 +44,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public DownloadAdapter(Activity activity, RecyclerView recyclerView) {
         this.context = recyclerView.getContext();
-        downloadManager = new DownloadManager.Builder().initialCallback(this).build();
+        downloadManager = new DownloadManager.Builder()
+                .initialCallback(this)
+                .build();
         this.list = downloadManager.getAllTasks();
         this.activity = activity;
         EventBus.getDefault().register(this);
@@ -174,6 +176,11 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             downStatus = itemView.findViewById(R.id.down_status);
         }
 
+        /**
+         * 显示下载信息
+         *
+         * @param info 任务信息
+         */
         void bind(TaskInfo info) {
             this.info = info;
             fileNameText.setText(info.getFileName()); // 设置文件名
@@ -199,6 +206,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             } else if (info.getTaskStatus() == Constant.MSG_FAIL) {
                 startTask.setImageDrawable(itemView.getResources().getDrawable(R.drawable.ic_error));
                 downStatus.setText(R.string.download_fail);
+            } else if (info.getTaskStatus() == Constant.MSG_DELETE) {
+                startTask.setImageDrawable(itemView.getResources().getDrawable(R.drawable.ic_error));
+                downStatus.setText(R.string.file_is_delete);
             }
             // 设置文件类型对应图标
             fileIcon.setImageDrawable(itemView.getResources().getDrawable(FileUtil.getType(info.getFileName())));
@@ -228,8 +238,17 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         break;
                     case R.id.file_icon:
                         // 打开文件
-                        if (info.getTaskStatus() == Constant.MSG_FINISH)
-                            Toast.makeText(itemView.getContext(), "尚未支持", Toast.LENGTH_SHORT).show();
+                        if (info.getTaskStatus() == Constant.MSG_FINISH) {
+                            File file = new File(info.getFilePath(), info.getFileName());
+                            if (file.exists()) {
+                                onSuccess(new Result(Constant.MSG_SUCCESS, "尚未支持"));
+                            } else {
+                                info.setTaskStatus(Constant.MSG_DELETE);
+                                notifyDataSetChanged();
+                                onError(new Result(Constant.MSG_ERROR, context.getString(R.string.file_is_delete)));
+                                downloadManager.update(info);
+                            }
+                        }
                         break;
                 }
             }
@@ -242,6 +261,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         public void onFinished() {
             notifyDataSetChanged();
         }
+
         /**
          * 任务进度回调，刷新下载速度、剩余时间、下载进度条
          */
@@ -257,6 +277,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             downSize.setText(String.format(itemView.getResources().getString(R.string.down_count),
                     StringUtil.convertFileSize(info.getDownloadSize()), StringUtil.convertFileSize(info.getFileSize()), (int) progressBar.getProgress()));
         }
+
         /**
          * 任务暂停则刷新并显示暂停
          */
@@ -264,6 +285,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         public void onPause() {
             notifyDataSetChanged();
         }
+
         /**
          * 任务重置则刷新并显示重置后的已暂停状态
          */
@@ -271,6 +293,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         public void onReset() {
             notifyDataSetChanged();
         }
+
         /**
          * 任务等待显示等待下载状态
          */
@@ -279,6 +302,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             startTask.setImageDrawable(itemView.getResources().getDrawable(R.drawable.ic_wait));
             downStatus.setText(R.string.wait_down);
         }
+
         /**
          * 任务错误则刷新显示错误状态
          */
@@ -286,6 +310,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         public void onFail() {
             notifyDataSetChanged();
         }
+
         /**
          * 任务已删除则刷新以删除任务显示
          */

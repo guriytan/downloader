@@ -233,4 +233,8 @@ public class FileUtil {
             }
         }
     }
+
+    public static String getMIMEType(File file) {
+        return "application/vnd.android.package-archive";
+    }
 }

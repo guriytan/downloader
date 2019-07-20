@@ -115,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(context,
                 RecyclerView.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
-        //
         DownloadAdapter downloadAdapter = new DownloadAdapter(this, recyclerView);
         recyclerView.setAdapter(downloadAdapter);
     }

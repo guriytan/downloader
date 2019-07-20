@@ -57,6 +57,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
+                android:text="@string/maximum" />
+            <SeekBar
+                android:id="@+id/thread_number"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:max="6"
+                android:min="1"
+                android:scrollIndicators="bottom"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
                 android:text="@string/allow_flow" />
             <Switch
                 android:id="@+id/mobile_net"

@@ -85,6 +85,8 @@ class DatabaseManager {
 
     /**
      * 获取所有下载任务
+     *
+     * @return 所有下载任务
      */
     List<TaskInfo> getAllTasks() {
         try {

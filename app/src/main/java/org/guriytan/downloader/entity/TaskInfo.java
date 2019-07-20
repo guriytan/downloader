@@ -4,7 +4,6 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 
 import java.util.Date;
-
 import org.greenrobot.greendao.annotation.Generated;
 
 /**
@@ -30,17 +29,15 @@ public class TaskInfo {
     private int taskStatus;
     // 任务类型
     private int taskType;
-    // 用于下载的线程数
-    private int threadNumber;
     // 回显的下载速度
     private long speed;
     // 创建日期
     private Date date;
 
-    @Generated(hash = 2006739888)
+    @Generated(hash = 1375668924)
     public TaskInfo(Long id, String taskId, String url, String filePath,
-                    String fileName, long fileSize, long downloadSize, int taskStatus,
-                    int taskType, int threadNumber, long speed, Date date) {
+            String fileName, long fileSize, long downloadSize, int taskStatus,
+            int taskType, long speed, Date date) {
         this.id = id;
         this.taskId = taskId;
         this.url = url;
@@ -50,7 +47,6 @@ public class TaskInfo {
         this.downloadSize = downloadSize;
         this.taskStatus = taskStatus;
         this.taskType = taskType;
-        this.threadNumber = threadNumber;
         this.speed = speed;
         this.date = date;
     }
@@ -139,14 +135,6 @@ public class TaskInfo {
         this.date = date;
     }
 
-    public int getThreadNumber() {
-        return threadNumber;
-    }
-
-    public void setThreadNumber(int threadNumber) {
-        this.threadNumber = threadNumber;
-    }
-
     public long getSpeed() {
         return speed;
     }
@@ -167,7 +155,6 @@ public class TaskInfo {
                 ", downloadSize=" + downloadSize +
                 ", taskStatus=" + taskStatus +
                 ", taskType=" + taskType +
-                ", threadNumber=" + threadNumber +
                 ", speed=" + speed +
                 ", date=" + date +
                 '}';
