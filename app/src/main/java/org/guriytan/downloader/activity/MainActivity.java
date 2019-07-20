@@ -1,15 +1,18 @@
 package org.guriytan.downloader.activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.irozon.sneaker.Sneaker;
 import com.obsez.android.lib.filechooser.ChooserDialog;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -35,10 +38,13 @@ import org.guriytan.downloader.util.FileUtil;
 
 import java.io.File;
 
+import chtgupta.qrutils.qractivity.QRScanner;
+
 /**
  * 主页面
  */
 public class MainActivity extends AppCompatActivity {
+    private static final int QR_SCAN_REQUEST_CODE = 123;
     private Context context;
     private DownloadManager downloadManager;
 
@@ -176,11 +182,38 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(intent);
             return true;
+        } else if (id == R.id.scan) {
+            startActivityForResult(
+                    new QRScanner(getBaseContext())         // required
+                            .setFullScreen(false)           // hides the status bar in QRActivity if true
+                            .setAutoFocusInterval(2000)     // sets the auto focus interval in QR scanner
+                            .setFocusOnTouchEnabled(true)   // decides if QR scanner should focus on tap (may not work on all devices)
+                            .setImagePickerEnabled(true)    // enables/disables the use of image picker for reading QRs from image files
+                            .build(), QR_SCAN_REQUEST_CODE  // required
+            );
         } else if (id == R.id.exist) {
             finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == QR_SCAN_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                EventBus.getDefault().post(new Result(Constant.MSG_CREATE, data.getStringExtra("qrData")));
+            } else if (resultCode == RESULT_CANCELED) {
+                Sneaker.with(this)
+                        .setTitle(getString(R.string.title_dialog), R.color.white)
+                        .setMessage(data.getStringExtra("error"), R.color.white)
+                        .setDuration(2000)
+                        .autoHide(true)
+                        .setIcon(R.drawable.ic_error, R.color.white, false)
+                        .sneak(R.color.colorAccent);
+            }
+        }
     }
 
     /**

@@ -39,6 +39,7 @@ dependencies {
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
     implementation 'com.irozon.sneaker:sneaker:2.0.0'
     implementation 'com.moos:Material-ProgressView:1.0.5'
+    implementation 'chtgupta.qrutils:qractivity:0.2.0'
 
     testImplementation 'junit:junit:4.12'
 
