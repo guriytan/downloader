@@ -4,15 +4,25 @@
 
 **目前仅支持http\https的下载链接 ~~，而且仅支持单线程断点续传~~**
 
-下一步待补充的功能：
+## Remaining：
 * 打开已下载文件
 * ~~新建任务重命名~~(不实现)
 * ~~控制任务下载的多线程数量~~
 * ~~优化下载任务的创建~~
 * ~~监控文件是否已删除功能~~
 * ~~多线程下载~~
-* 扫一扫下载文件功能
+* ~~扫一扫下载文件功能~~
 * 解析磁力链接以及种子文件并下载
 
-## APP截图：
+## Screenshot：
 <img src="https://github.com/guriytan/downloader/raw/master/Screenshot.png" width = "300"/>
+
+## Import
+* [GreenDao](https://github.com/greenrobot/greenDAO)
+* [Retrofit](https://github.com/square/retrofit)
+* EventBus](https://github.com/greenrobot/EventBus)
+
+* [android-file-chooser](https://github.com/hedzr/android-file-chooser)
+* [Sneaker](https://github.com/Hamadakram/Sneaker)
+* [Material-ProgressView](https://github.com/Moosphan/Material-ProgressView)
+* [QRUtils-Android](https://github.com/chtgupta/QRUtils-Android)
