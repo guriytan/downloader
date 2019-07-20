@@ -4,7 +4,7 @@
 
 **目前仅支持http\https的下载链接 ~~，而且仅支持单线程断点续传~~**
 
-## Remaining：
+## Remaining
 * 打开已下载文件
 * ~~新建任务重命名~~(不实现)
 * ~~控制任务下载的多线程数量~~
@@ -14,7 +14,7 @@
 * ~~扫一扫下载文件功能~~
 * 解析磁力链接以及种子文件并下载
 
-## Screenshot：
+## Screenshot
 <img src="https://github.com/guriytan/downloader/raw/master/Screenshot.png" width = "300"/>
 
 ## Import
