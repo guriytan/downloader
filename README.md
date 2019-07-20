@@ -20,7 +20,7 @@
 ## Import
 * [GreenDao](https://github.com/greenrobot/greenDAO)
 * [Retrofit](https://github.com/square/retrofit)
-* EventBus](https://github.com/greenrobot/EventBus)
+* [EventBus](https://github.com/greenrobot/EventBus)
 
 * [android-file-chooser](https://github.com/hedzr/android-file-chooser)
 * [Sneaker](https://github.com/Hamadakram/Sneaker)
